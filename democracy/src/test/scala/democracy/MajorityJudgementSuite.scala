@@ -23,6 +23,7 @@ class MajorityJudgementSuite extends FunSuite:
     val median = Grade.median(List(grade))
     assertEquals(median, grade)
   }
+  
 
   test("The median of a collection with two elements can be any of those two elements"){
     val grade1, grade2 = randomGrade()
