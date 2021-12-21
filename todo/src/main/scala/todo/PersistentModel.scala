@@ -1,11 +1,13 @@
 package todo
 
 import cats.implicits.*
-import java.nio.file.{Path, Paths, Files}
+
+import java.nio.file.{Files, Path, Paths}
 import java.nio.charset.StandardCharsets
 import io.circe.{Decoder, Encoder}
 import io.circe.parser.*
 import io.circe.syntax.*
+
 import scala.collection.mutable
 import todo.data.*
 
@@ -96,28 +98,49 @@ object PersistentModel extends Model:
    */
 
   def create(task: Task): Id =
-    ???
+    val idGenerator = IdGenerator(Id(tasks.toList.size))
+    val id = idGenerator.nextId()
+    saveTasks(Tasks(tasks.toMap + (id -> task)))
+    saveId(id)
+    id
 
   def read(id: Id): Option[Task] =
-    ???
+    val task = tasks.tasks.filter((id1: Id, task1: Task) => id1 == id).toList
+    task match
+      case (id, t) :: Nil => Some(t)
+      case _ => None
 
   def update(id: Id)(f: Task => Task): Option[Task] =
-    ???
+    val task = tasks.tasks.filter((id1: Id, task1: Task) => id1 == id).toList
+    task match
+      case (id, t) :: Nil =>
+        saveTasks(Tasks(tasks.toMap + (id -> f(t))))
+        Some(f(t))
+      case _ => None
 
   def delete(id: Id): Boolean =
-    ???
+    read(id) match
+      case None => false
+      case Some(t) =>
+        val newTasks = tasks.tasks.filter((id1, task1) => id1 != id).toList
+        saveTasks(Tasks(newTasks))
+        true
 
-  def tasks: Tasks =
-    ???
+  def tasks: Tasks = loadTasks()
 
   def tasks(tag: Tag): Tasks =
-    ???
+    val tasksFiltered = tasks.tasks.filter((id, task) => task.tags.contains(tag))
+    Tasks(tasksFiltered)
 
   def complete(id: Id): Option[Task] =
-    ???
+    val task: Task = read(id).get.complete
+    saveTasks(tasks)
+    Some(task)
 
   def tags: Tags =
-    ???
+    val tttt: List[Tag] = tasks.tasks.flatMap(task => task._2.tags).toSet.toList
+    Tags(tttt)
 
   def clear(): Unit =
-    ???
+    saveTasks(Tasks.empty)
+    saveId(Id(0))
