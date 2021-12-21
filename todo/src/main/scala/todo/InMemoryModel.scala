@@ -1,8 +1,10 @@
 package todo
 
 import cats.implicits.*
+
 import scala.collection.mutable
 import todo.data.*
+import todo.data.State.completedNow
 
 /**
  * The InMemoryModel is a Model that stores all the tasks in RAM, and hence they
@@ -41,7 +43,10 @@ object InMemoryModel extends Model:
     idStore.get(id)
 
   def complete(id: Id): Option[Task] =
-    Some(read(id).get.complete)
+    read(id) match
+      case Some(task) =>
+        Some(Task(completedNow, task.description, task.notes, task.tags))
+      case None => None
 
   def update(id: Id)(f: Task => Task): Option[Task] =
     idStore.updateWith(id)(opt => opt.map(f))

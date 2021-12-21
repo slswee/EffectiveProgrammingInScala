@@ -10,6 +10,7 @@ import io.circe.syntax.*
 
 import scala.collection.mutable
 import todo.data.*
+import todo.data.State.completedNow
 
 /**
  * The PersistentModel is a model that saves all data to files, meaning that
@@ -133,9 +134,15 @@ object PersistentModel extends Model:
     Tasks(tasksFiltered)
 
   def complete(id: Id): Option[Task] =
-    val task: Task = read(id).get.complete
-    saveTasks(tasks)
-    Some(task)
+    read(id) match
+      case Some(task) =>
+        update(id)(task => Task(completedNow, task.description, task.notes, task.tags))
+      case None => None
+
+//    val task: Task = read(id).get.complete
+//    update(id)(task => task)
+//    saveTasks(tasks)
+//    Some(task)
 
   def tags: Tags =
     val tttt: List[Tag] = tasks.tasks.flatMap(task => task._2.tags).toSet.toList
